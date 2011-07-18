@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# install http://code.google.com/p/amazon-simpledb-cli/
+# and http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1136
+# WARNING: make sure to install the required packages of the second as well
+
+# only make backups when we are NOT master
+if [ `mongo --quiet --eval 'rs.isMaster().ismaster'` == 'false' ]; then
+	echo 'no master, no backups';
+	exit;
+fi
+
+# specify location of X.509 certificates for the ec2 command line tools
+. ~/.ec2/ec2rc
+
+file=/var/run/mongodb.volume.id
+region="us-east-1"
+
+# if called with a parameter that is accepted by 'date --date'
+# it creates a date based on that value. if it is empty we take
+# a default expiration of 24 hours
+offset=$1
+if [ "${offset}" == "" ]
+then
+    offset="24 hours"
+fi
+
+expiration=$(date -u --date="${offset}" +"%Y-%m-%d %H:%M:%S")
+timestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
+if [ "$expiration" == "" ]
+then
+    exit 0
+fi
+
+vols=( `cat ${file}` )
+
+mountpoints=( "/var/mongodb" )
+
+for ((i = 0; i < ${#vols[@]}; i++))
+do
+    /root/synclock.js
+    xfs_freeze -f ${mountpoints[i]}
+    snapshot=($(ec2-create-snapshot ${vols[i]} --region $region))
+    xfs_freeze -u ${mountpoints[i]}
+    /root/unlock.js
+
+    # now add an item to the SimpleDB domain 
+    # containing the snapshot id and its expiration
+    /usr/local/bin/simpledb put zuckerberg ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"
+done

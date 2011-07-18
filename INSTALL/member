@@ -1,0 +1,47 @@
+#!/bin/bash
+
+apt-get install build-essential git-core
+
+# see this install guide http://aws.amazon.com/articles/3998
+apt-get install python-setuptools
+
+# install boto
+mkdir boto && cd boto
+git clone https://github.com/boto/boto.git .
+python setup.py install
+
+# install monit and related scripts
+apt-get install bison flex libssl-dev
+wget http://mmonit.com/monit/dist/monit-5.2.tar.gz
+tar xzvf monit-5.2.tar.gz 
+cd monit-5.2
+
+./configure
+make
+make install
+
+# install mongodb
+apt-get install unzip xfsprogs python-dev python-pip
+pip install -U pymongo
+
+echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" >> /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+apt-get update && apt-get install mongodb-10gen
+
+stop mongodb
+mkdir /var/mongodb
+
+sed -i 's/\/var\/lib\/mongodb/\/var\/mongodb\/lib/' /etc/mongodb.conf
+sed -i 's/\/var\/log\/mongodb/\/var\/mongodb\/log/' /etc/mongodb.conf
+sed -i 's/--start/--rest --oplogSize 5120 --start --pidfile \/var\/run\/mongodb.pid/' /etc/init/mongodb.conf
+
+sed -i 's/universe/multiverse/g' /etc/apt/sources.list
+apt-get update
+apt-get install ec2-api-tools
+
+./create_mongodb_volume.sh
+
+mkdir -p /var/mongodb/lib
+mkdir -p /var/mongodb/log
+chown -R mongodb.mongodb /var/mongodb
+restart mongodb

@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# install http://code.google.com/p/amazon-simpledb-cli/
+# and http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1136
+# WARNING: make sure to install the required packages of the second as well
+
+. ~/.ec2/ec2rc
+region="us-east-1"
+
+now=$(date +"%Y-%m-%d %H:%M:%S")
+
+snapshots=$(simpledb select "select * from zuckerberg where expires < '${now}'")
+
+for snapshot in $snapshots
+do
+    snap=`expr match "$snapshot" '.*\(snap-........\).*'`
+    if [ -n "$snap" ]; then
+        # remove the item from SimpleDB
+        simpledb delete zuckerberg $snap
+        # delete the snapshot itself
+        ec2-delete-snapshot $snap --region $region
+    fi
+done

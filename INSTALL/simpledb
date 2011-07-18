@@ -1,0 +1,63 @@
+# to remove all the BS questions
+rm -f /etc/perl/CPAN/Config.pm
+
+perl -MCPAN -e 'install Digest::SHA'
+perl -MCPAN -e 'install XML::Simple'
+perl -MCPAN -e 'install Bundle::LWP'
+
+apt-get install libssl-dev
+perl -MCPAN -e 'install Crypt::SSLeay'
+
+perl -MCPAN -e 'install Getopt::Long'
+perl -MCPAN -e 'install Pod::Usage'
+perl -MCPAN -e 'install Digest::SHA1'
+perl -MCPAN -e 'install Digest::HMAC'
+
+wget http://aws-libraries.s3.amazonaws.com/perl/AmazonSimpleDB/2009-04-15/AmazonSimpleDB-2009-04-15-perl-library.zip
+unzip AmazonSimpleDB-2009-04-15-perl-library.zip
+sitelib=$(perl -MConfig -le 'print $Config{sitelib}')
+cp -r AmazonSimpleDB-*-perl-library/src/Amazon $sitelib
+curl -Lo /usr/local/bin/simpledb http://simpledb-cli.notlong.com
+chmod +x /usr/local/bin/simpledb
+
+# make sure we use the close SimpleDB, not the default
+echo '--- simpledb.org2011-06-15 04:55:20.000000000 +0000
++++ /usr/local/bin/simpledb 2011-06-15 05:09:56.000000000 +0000
+@@ -245,6 +245,7 @@
+ my $help        = 0;
+ my $aws_access_key_id     = $ENV{AWS_ACCESS_KEY_ID};
+ my $aws_secret_access_key = $ENV{AWS_SECRET_ACCESS_KEY};
++my $sdb_service_url       = $ENV{SDB_SERVICE_URL};
+ my $replace               = 0;
+ my $max                   = undef;
+ my $separator             = '=';
+@@ -281,6 +282,7 @@
+ my $sdb = Amazon::SimpleDB::Client->new(
+   $aws_access_key_id,
+   $aws_secret_access_key,
++  {"ServiceURL" => "$sdb_service_url"}
+ );
+ 
+ my $command = shift(@ARGV) || pod2usage(1);' | patch -p0
+
+# check url on http://aws.amazon.com/articles/3912 amazon SimpleDB Endpoints, below it is for eu-west
+echo "export SDB_SERVICE_URL='https://sdb.amazonaws.com'" >> ~/.ec2/ec2rc && . ~/.ec2/ec2rc
+
+# besure you are signed up for simpledb before executing command below
+# if not go to: http://aws.amazon.com/simpledb/ and sign up 
+# error when you are not signed up:  
+# simpledb: ERROR: Running 'create-domain snapshot': Subscription check failed. Please sign up for Amazon SimpleDB service.
+simpledb create-domain zuckerberg
+
+apt-get install git-core
+git clone git://github.com/9apps/programming-amazon-ec2.git
+cp programming-amazon-ec2/ec2/*-backups .
+# and edit them to fit our needs
+chmod 755 *-backups
+
+# add to the crontab, for example like this
+echo '@daily /root/purge-backups > /dev/null 2>&1
+@daily /root/make-backups "7 days" > /dev/null 2>&1
+@weekly /root/make-backups "1 month" > /dev/null 2>&1
+@monthly /root/make-backups "1 year" > /dev/null 2>&1
+0 */3 * * * /root/make-backups "24 hours" > /dev/null 2>&1' | crontab

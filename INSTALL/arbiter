@@ -1,0 +1,35 @@
+#!/bin/bash
+
+apt-get install build-essential git-core
+
+# see this install guide http://aws.amazon.com/articles/3998
+apt-get install python-setuptools
+
+# install boto
+mkdir boto && cd boto
+git clone https://github.com/boto/boto.git .
+python setup.py install
+
+# install monit and related scripts
+apt-get install bison flex libssl-dev
+
+cd
+wget http://mmonit.com/monit/dist/monit-5.2.tar.gz
+tar xzvf monit-5.2.tar.gz 
+cd monit-5.2
+
+./configure
+make
+make install
+
+# install mongodb
+apt-get install unzip xfsprogs python-dev python-pip
+pip install -U pymongo
+
+echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" >> /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+apt-get update && apt-get install mongodb-10gen
+
+sed -i 's/^.*replSet.*$/replSet\ =\ zuckerberg/' /etc/mongodb.conf
+sed -i 's/--config/--rest --config/' /etc/init/mongodb.conf
+restart mongodb
