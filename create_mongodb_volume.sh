@@ -46,7 +46,7 @@ if [[ ${snapshot} =~ snap-[[:alnum:]]{8} ]]; then
 else
 	now=$(date +"%Y-%m-%d %H:%M:%S")
 
-	snapshots=$(simpledb --max 1 select "select * from zuckerberg where timestamp < '${now}' order by timestamp desc limit 1")
+	snapshots=$(simpledb --max 1 select "select * from mongodb where timestamp < '${now}' order by timestamp desc limit 1")
 	snapshot=`expr match "$snapshots" '.*\(snap-........\).*'`
 fi
 

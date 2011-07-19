@@ -30,6 +30,6 @@ echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" >>
 apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
 apt-get update && apt-get install mongodb-10gen
 
-sed -i 's/^.*replSet.*$/replSet\ =\ zuckerberg/' /etc/mongodb.conf
+sed -i 's/^.*replSet.*$/replSet\ =\ mongodb/' /etc/mongodb.conf
 sed -i 's/--config/--rest --config/' /etc/init/mongodb.conf
 restart mongodb

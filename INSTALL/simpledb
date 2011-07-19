@@ -47,7 +47,7 @@ echo "export SDB_SERVICE_URL='https://sdb.amazonaws.com'" >> ~/.ec2/ec2rc && . ~
 # if not go to: http://aws.amazon.com/simpledb/ and sign up 
 # error when you are not signed up:  
 # simpledb: ERROR: Running 'create-domain snapshot': Subscription check failed. Please sign up for Amazon SimpleDB service.
-simpledb create-domain zuckerberg
+simpledb create-domain mongodb
 
 apt-get install git-core
 git clone git://github.com/9apps/programming-amazon-ec2.git

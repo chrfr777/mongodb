@@ -62,5 +62,5 @@ do
 
     # now add an item to the SimpleDB domain 
     # containing the snapshot id and its expiration
-    /usr/local/bin/simpledb put zuckerberg ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"
+    /usr/local/bin/simpledb put mongodb ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"
 done
