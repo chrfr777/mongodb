@@ -20,5 +20,5 @@
 @monthly /root/make-backups "1 year" > /dev/null 2>&1
 0 */3 * * * /root/make-backups "24 hours" > /dev/null 2>&1
 
-# make sure zuckerberg is resolved correctly
-* * * * * /root/zuckerberg.sh > /dev/null 2>&1
+# make sure endpoint is resolved correctly
+* * * * * /root/endpoint.sh > /dev/null 2>&1

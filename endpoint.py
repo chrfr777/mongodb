@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # first get the old value
     sets = route53.get_all_rrsets(zones[USABILLA_MONGODB_ZONE_NAME], None)
     for rset in sets:
-        if rset.name == 'zuckerberg.%s' % USABILLA_MONGODB_ZONE_NAME:
+        if rset.name == 'mongodb.%s' % USABILLA_MONGODB_ZONE_NAME:
             value = rset.resource_records[0]
 
     # only change when necessary
@@ -50,11 +50,11 @@ if __name__ == '__main__':
         changes = ResourceRecordSets(route53, zone_id)
 
         if value != '':
-            change = changes.add_change("DELETE", 'zuckerberg.%s' % USABILLA_MONGODB_ZONE_NAME, "CNAME", 60)
+            change = changes.add_change("DELETE", 'mongodb.%s' % USABILLA_MONGODB_ZONE_NAME, "CNAME", 60)
             change.add_value(value)
 
-        # now, add ourselves as zuckerberg
-        change = changes.add_change("CREATE", 'zuckerberg.%s' % USABILLA_MONGODB_ZONE_NAME, "CNAME", 60)
+        # now, add ourselves as mongodb
+        change = changes.add_change("CREATE", 'mongodb.%s' % USABILLA_MONGODB_ZONE_NAME, "CNAME", 60)
         change.add_value(platform.node())
 
         changes.commit()

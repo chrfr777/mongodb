@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with 9Apps/MongoDB. If not, see <http://www.gnu.org/licenses/>.
 
-# set the correct zuckerberg.usabilla.com (me baby, me)
+# set the correct mongodb.usabilla.com (me baby, me)
 if [ `mongo --quiet --eval 'rs.isMaster().ismaster'` == 'true' ]; then
-	`python /root/zuckerberg.py`
+	`python /root/endpoint.py`
 fi
