@@ -3,8 +3,10 @@
 [MongoDB](http://www.mongodb.org/) is drawing crowds, lately. Some even dare to call [it the new MySQL](http://www.thenetworkadministrator.com/MongoDB_MySQL.htm). We didn't work with it yet, although we investigated its use on GeoSpatial systems already [a while ago](http://www.9apps.net/blog/2010/5/11/where-to-put-my-pois.html).
 
 [Usabilla](http://www.usabilla.com/), our latest partner, and one of  [Amsterdam's hottest startups](http://www.sfgate.com/cgi-bin/article.cgi?f=/g/a/2011/06/22/prweb8583904.DTL) wants one. Apart from being fun, one of the reasons they 'want one' is that it promises to help them fight [the monkey](http://aws.amazon.com/message/65648/) that wrecked serious havoc on my wedding day. So, we have to build a MongoDB 'thing' on Amazon AWS giving us
+
 * high availability, and
 * scalability
+
 MongoDB will help Usabilla deal with huge key/value style datasets when they will start collecting feedback from live events. It is also a good fit because the team can continue to practice their Javascript skills.
 
 ![MongoDB on AWS Architecture](https://docs.google.com/drawings/pub?id=1xRIj3E15t3Id7nZTHWGQ7ehhqFdYZ9DnRPNXH82DRKk&w=513&h=436)
@@ -22,8 +24,10 @@ We want to run a [MongDB replica set](http://www.mongodb.org/display/DOCS/Replic
 The smallest MongoDB replica set that is recommended has one primary, one secondary, and one arbiter. The arbiter doesn't do much, but helps in electing new primaries when necessary. We don't want to rely on one arbiter, so we'll use two. (This is not that expensive, because we can run them on t1.micro instances.)
 
 The idea is to build two different types of instances
+
 1. regular replica set member (primary or secondary), holding data
 2. arbiters, without data
+
 Once the replica set is initiated, the members have to be able to (de)register itself. A member will join the replica set automatically. The arbiter will do nothing but vote. A new member will either do a full sync, or an incremental sync depending on the availability of backups. (The MongoDB data and log is stored on a separate [EBS](http://aws.amazon.com/ebs/) volume.)
 
 ## Addressability (Route53)
@@ -53,9 +57,11 @@ If a regular member launches, it first checks the availability of snapshots. If 
 ## Conclusion
 
 There are a couple of small things we would like to do, namely
+
 * automatic removal of stale members
 * [CloudWatch](http://aws.amazon.com/cloudwatch/) monitoring of member
 * and CloudWatch monitoring of the replica set
+
 But, in the meantime, we have probably the coolest MongoDB replica set in Amazon AWS!! It is very resilient, and we'll survive Chaos Monkeys easily, even those that visit on nice spring days. Of course we use Availability Zones, for extra durability.
 
 An added bonus is that it is extremely easy to upgrade the entire system. If we want to do an upgrade, of compatible MongoDB versions, we only have to change the AutoScaling, terminate the instances one by one. Our MongoDB RDS will take care of the rest.
