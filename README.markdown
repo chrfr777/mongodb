@@ -1,6 +1,6 @@
-# MongDB (RDS-style)
+# MongoDB on AWS (RDS-Style)
 
-[MongoDB](http://www.mongodb.org/) is drawing crowds, lately. Some even dare to call [it the new MySQL](http://www.thenetworkadministrator.com/MongoDB_MySQL.htm). We didn't work with it yet, although we investigated its use on GeoSpatial systems already [a while ago](http://www.9apps.net/blog/2010/5/11/where-to-put-my-pois.html).
+<img src="http://byrene.net/wp-content/uploads/2011/04/ChaosMonkey-e1302266059582.jpg" width="256px" align="left" /> [MongoDB](http://www.mongodb.org/) is drawing crowds, lately. Some even dare to call [it the new MySQL](http://www.thenetworkadministrator.com/MongoDB_MySQL.htm). We didn't work with it yet, although we investigated its use on GeoSpatial systems already [a while ago](http://www.9apps.net/blog/2010/5/11/where-to-put-my-pois.html).
 
 [Usabilla](http://www.usabilla.com/), our latest partner, and one of  [Amsterdam's hottest startups](http://www.sfgate.com/cgi-bin/article.cgi?f=/g/a/2011/06/22/prweb8583904.DTL) wants one. Apart from being fun, one of the reasons they 'want one' is that it promises to help them fight [the monkey](http://aws.amazon.com/message/65648/) that wrecked serious havoc on my wedding day. So, we have to build a MongoDB 'thing' on Amazon AWS giving us
 
@@ -13,13 +13,14 @@ MongoDB will help Usabilla deal with huge key/value style datasets when they wil
 
 If you do not have the patience to continue to read, but want to get down to it immediately, go get [our stuff at github](https://github.com/9apps/mongodb). We installed everything on Ubuntu, you can see our full install script in the repository. This is how to easily install the latest MongoDB
 
-    echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" >> /etc/apt/sources.list    
+    echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" \
+            >> /etc/apt/sources.list    
     apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
     apt-get update && apt-get install mongodb-10gen 
 
-## MongDB
+## MongoDB
 
-We want to run a [MongDB replica set](http://www.mongodb.org/display/DOCS/Replica+Sets). In short it gives you a distributed database, with one 'primary' and hopefully one or more 'secondaries' that can take over when the system decides that it is necessary. One obvious example of electing a new primary is failure of the old one. Another obvious one is for maintenance, at least when it is easy to force these reconfigurations.
+We want to run a [MongoDB replica set](http://www.mongodb.org/display/DOCS/Replica+Sets). In short it gives you a distributed database, with one 'primary' and hopefully one or more 'secondaries' that can take over when the system decides that it is necessary. One obvious example of electing a new primary is failure of the old one. Another obvious one is for maintenance, at least when it is easy to force these reconfigurations.
 
 The smallest MongoDB replica set that is recommended has one primary, one secondary, and one arbiter. The arbiter doesn't do much, but helps in electing new primaries when necessary. We don't want to rely on one arbiter, so we'll use two. (This is not that expensive, because we can run them on t1.micro instances.)
 

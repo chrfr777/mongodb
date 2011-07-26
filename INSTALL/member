@@ -45,3 +45,16 @@ mkdir -p /var/mongodb/lib
 mkdir -p /var/mongodb/log
 chown -R mongodb.mongodb /var/mongodb
 restart mongodb
+
+# Installing AWS SDK for PHP
+apt-get install libssl-dev php5-cli php-pear php5-curl php5-dev
+
+pear channel-discover pear.amazonwebservices.com
+pear install aws/sdk
+
+# Installing PHP MongDB
+pecl install mongo
+
+echo "; configuration for php MongDB module
+extension=mongo.so" > /etc/php5/cli/conf.d/mongo.conf
+cat /etc/php5/cli/conf.d/mongo.conf >> /etc/php5/cli/php.ini
