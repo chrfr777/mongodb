@@ -1,39 +1,23 @@
 #!/bin/bash
-
-# Copyright (C) 2011 9Apps.net
-# 
-# This file is part of 9Apps/MongoDB.
-# 
-# 9Apps/MongoDB is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# 9Apps/MongoDB is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with 9Apps/MongoDB. If not, see <http://www.gnu.org/licenses/>.
-
+#
 # install http://code.google.com/p/amazon-simpledb-cli/
 # and http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1136
 # WARNING: make sure to install the required packages of the second as well
 
-. ~/.ec2/ec2rc
-region="us-east-1"
+# first make sure we have enough information to do the work
+source /root/config.sh
 
-now=$(date +"%Y-%m-%d %H:%M:%S")
+now=$(/bin/date +"%Y-%m-%d %H:%M:%S")
 
-snapshots=$(simpledb select "select * from mongodb where expires < '${now}'")
+snapshots=$(/usr/local/bin/simpledb select "select * from ${SET_NAME} where expires < '${now}'")
 
 for snapshot in $snapshots
 do
     snap=`expr match "$snapshot" '.*\(snap-........\).*'`
     if [ -n "$snap" ]; then
         # remove the item from SimpleDB
-        simpledb delete mongodb $snap
+        /usr/local/bin/simpledb delete ${SET_NAME} $snap
         # delete the snapshot itself
-        ec2-delete-snapshot $snap --region $region
+        /usr/bin/ec2-delete-snapshot $snap --region ${EC2_REGION}
     fi
 done
