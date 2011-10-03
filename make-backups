@@ -1,50 +1,35 @@
 #!/bin/bash
-
-# Copyright (C) 2011 9Apps.net
-# 
-# This file is part of 9Apps/MongoDB.
-# 
-# 9Apps/MongoDB is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# 9Apps/MongoDB is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with 9Apps/MongoDB. If not, see <http://www.gnu.org/licenses/>.
-
+#
 # install http://code.google.com/p/amazon-simpledb-cli/
 # and http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1136
 # WARNING: make sure to install the required packages of the second as well
 
+# first make sure we have enough information to do the work
+source /root/config.sh
+
 # only make backups when we are NOT master
-if [ `mongo --quiet --eval 'rs.isMaster().ismaster'` == 'false' ]; then
-	echo 'no master, no backups';
+if [ `/usr/bin/mongo --quiet --eval 'rs.isMaster().ismaster'` != 'false' ]; then
+	echo 'master, no backups';
 	exit;
 fi
 
-# specify location of X.509 certificates for the ec2 command line tools
-. ~/.ec2/ec2rc
-
-file=/var/run/mongodb.volume.id
-region="us-east-1"
+file=/var/mongodb/run/mongodb.volume.id
+if [ ! -f ${file} ]; then
+	echo "no volume, lets get outa here"
+	exit
+fi
 
 # if called with a parameter that is accepted by 'date --date'
 # it creates a date based on that value. if it is empty we take
 # a default expiration of 24 hours
 offset=$1
-if [ "${offset}" == "" ]
-then
+if [ "${offset}" == "" ]; then
     offset="24 hours"
 fi
 
-expiration=$(date -u --date="${offset}" +"%Y-%m-%d %H:%M:%S")
-timestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
-if [ "$expiration" == "" ]
-then
+expiration=$(/bin/date -u --date="${offset}" +"%Y-%m-%d %H:%M:%S")
+timestamp=$(/bin/date -u +"%Y-%m-%d %H:%M:%S")
+if [ "$expiration" == "" ]; then
     exit 0
 fi
 
@@ -55,12 +40,12 @@ mountpoints=( "/var/mongodb" )
 for ((i = 0; i < ${#vols[@]}; i++))
 do
     /root/synclock.js
-    xfs_freeze -f ${mountpoints[i]}
-    snapshot=($(ec2-create-snapshot ${vols[i]} --region $region))
-    xfs_freeze -u ${mountpoints[i]}
+    /usr/sbin/xfs_freeze -f ${mountpoints[i]}
+    snapshot=($(/usr/bin/ec2-create-snapshot ${vols[i]} --region ${EC2_REGION} --description "Backup of ${vols[i]} - expires ${expiration}"))
+    /usr/sbin/xfs_freeze -u ${mountpoints[i]}
     /root/unlock.js
 
     # now add an item to the SimpleDB domain 
     # containing the snapshot id and its expiration
-    /usr/local/bin/simpledb put mongodb ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"
+    /usr/local/bin/simpledb put ${SET_NAME} ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"
 done

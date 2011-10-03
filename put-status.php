@@ -1,7 +1,9 @@
 <?php
 require_once 'AWSSDKforPHP/sdk.class.php';
 
-#date_default_timezone_set('UTC');
+define('AWS_KEY', getenv( 'EC2_KEY_ID'));
+define('AWS_SECRET_KEY', getenv( 'EC2_ACCESS_KEY'));
+define('AWS_ACCOUNT_ID', getenv( 'AWS_ACCOUNT_ID'));
 
 $m = new Mongo();
 $cw = new AmazonCloudWatch();
@@ -67,7 +69,7 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 		}
         }
 
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+	$metrics = array(
 		array(
 			'MetricName' => 'HealthyHostCount',
 			'Dimensions' => $dimensions,
@@ -75,9 +77,6 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
 		array(
 			'MetricName' => 'UnHealthyHostCount',
 			'Dimensions' => $dimensions,
@@ -85,9 +84,6 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
 		array(
 			'MetricName' => 'PassiveHostCount',
 			'Dimensions' => $dimensions,
@@ -95,9 +91,6 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
 		array(
 			'MetricName' => 'UnHealthyPassiveHostCount',
 			'Dimensions' => $dimensions,
@@ -105,9 +98,6 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
 		array(
 			'MetricName' => 'ArbiterCount',
 			'Dimensions' => $dimensions,
@@ -115,17 +105,16 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
 		array(
 			'MetricName' => 'UnHealthyArbiterCount',
 			'Dimensions' => $dimensions,
 			'Value' => $nr_unhealthy_arbiters,
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
-		),
-	));
+		)
+	);
+
+	$response = $cw->put_metric_data('9Apps/MongoDB', $metrics);
 	if( !$response->isOK()) { print_r( $response); }
 }
 
@@ -133,11 +122,25 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 	$state = $ismaster['ismaster'] ? 'primary' : 'secondary';
 	$timestamp = date( DATE_RFC822, $server_status['localTime']->sec);
 
+    $replset = array( array(
+		'Name' => 'ReplSet', 'Value' => $server_status['repl']['setName'])
+	);
+
 	$dimensions = array(
 		array('Name' => 'Host', 'Value' => $server_status['host'])
 	);
  
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+ 	# we can only add 20 metrics at most, so we need to do this twice
+	$metrics = array(
+		# first add the metric for aggregate
+		array(
+			'MetricName' => 'OperationsQueuedWaitingForLock',
+			'Dimensions' => $replset,
+			'Value' => $server_status['globalLock']['currentQueue']['total'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
+		# and don't forget the instance specific
 		array(
 			'MetricName' => 'OperationsQueuedWaitingForLock',
 			'Dimensions' => $dimensions,
@@ -145,9 +148,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'ReadOperationsQueuedWaitingForLock',
+			'Dimensions' => $replset,
+			'Value' => $server_status['globalLock']['currentQueue']['readers'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'ReadOperationsQueuedWaitingForLock',
 			'Dimensions' => $dimensions,
@@ -155,9 +162,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'WriteOperationsQueuedWaitingForLock',
+			'Dimensions' => $replset,
+			'Value' => $server_status['globalLock']['currentQueue']['writers'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'WriteOperationsQueuedWaitingForLock',
 			'Dimensions' => $dimensions,
@@ -165,9 +176,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'ActiveClients',
+			'Dimensions' => $replset,
+			'Value' => $server_status['globalLock']['activeClients']['total'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'ActiveClients',
 			'Dimensions' => $dimensions,
@@ -175,9 +190,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'ActiveReaders',
+			'Dimensions' => $replset,
+			'Value' => $server_status['globalLock']['activeClients']['readers'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'ActiveReaders',
 			'Dimensions' => $dimensions,
@@ -185,9 +204,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'ActiveWriters',
+			'Dimensions' => $replset,
+			'Value' => $server_status['globalLock']['activeClients']['writers'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'ActiveWriters',
 			'Dimensions' => $dimensions,
@@ -195,9 +218,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'ResidentMemory',
+			'Dimensions' => $replset,
+			'Value' => $server_status['mem']['resident'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Megabytes'
+		),
 		array(
 			'MetricName' => 'ResidentMemory',
 			'Dimensions' => $dimensions,
@@ -205,9 +232,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Megabytes'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'VirtualMemory',
+			'Dimensions' => $replset,
+			'Value' => $server_status['mem']['virtual'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Megabytes'
+		),
 		array(
 			'MetricName' => 'VirtualMemory',
 			'Dimensions' => $dimensions,
@@ -215,9 +246,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Megabytes'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'MappedMemory',
+			'Dimensions' => $replset,
+			'Value' => $server_status['mem']['mapped'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Megabytes'
+		),
 		array(
 			'MetricName' => 'MappedMemory',
 			'Dimensions' => $dimensions,
@@ -225,19 +260,31 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Megabytes'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'ActiveConnections',
+			'Dimensions' => $replset,
+			'Value' => $server_status['connections']['current'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'ActiveConnections',
 			'Dimensions' => $dimensions,
 			'Value' => $server_status['connections']['current'],
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
-		),
 	));
+	$response = $cw->put_metric_data('9Apps/MongoDB', $metrics);
 	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+
+	$metrics = array(
+		array(
+			'MetricName' => 'LastFlushOperation',
+			'Dimensions' => $replset,
+			'Value' => $server_status['backgroundFlushing']['last_ms'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Microseconds'
+		),
 		array(
 			'MetricName' => 'LastFlushOperation',
 			'Dimensions' => $dimensions,
@@ -245,9 +292,13 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Microseconds'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
-	$response = $cw->put_metric_data('9Apps/MongoDB', array(
+		array(
+			'MetricName' => 'OpenCursors',
+			'Dimensions' => $replset,
+			'Value' => $server_status['cursors']['totalOpen'],
+			'Timestamp' => $timestamp,
+			'Unit' => 'Count'
+		),
 		array(
 			'MetricName' => 'OpenCursors',
 			'Dimensions' => $dimensions,
@@ -255,21 +306,19 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 		),
-	));
-	if( !$response->isOK()) { print_r( $response); }
+	);
 
 	# add lag if secondary
 	if( !$ismaster['ismaster']) {
-		$response = $cw->put_metric_data('9Apps/MongoDB', array(
-			array(
+		$metrics[] = array(
 				'MetricName' => 'Lag',
 				'Dimensions' => $dimensions,
 				'Value' => $lag,
 				'Timestamp' => $timestamp,
 				'Unit' => 'Seconds'
-			),
-		));
+		);
 	}
+	$response = $cw->put_metric_data('9Apps/MongoDB', $metrics);
 	if( !$response->isOK()) { print_r( $response); }
 }
 

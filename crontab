@@ -1,24 +1,16 @@
-# Copyright (C) 2011 9Apps.net
-# 
-# This file is part of 9Apps/MongoDB.
-# 
-# 9Apps/MongoDB is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# 9Apps/MongoDB is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with 9Apps/MongoDB. If not, see <http://www.gnu.org/licenses/>.
-
 @daily /root/purge-backups > /dev/null 2>&1
 @daily /root/make-backups "7 days" > /dev/null 2>&1
 @weekly /root/make-backups "1 month" > /dev/null 2>&1
 @monthly /root/make-backups "1 year" > /dev/null 2>&1
 0 */3 * * * /root/make-backups "24 hours" > /dev/null 2>&1
 
-# make sure endpoint is resolved correctly
+20 15 * * * /root/purge-backups > /dev/null 2>&1
+
+# make sure we occasionally do zuckerberg work
 * * * * * /root/endpoint.sh > /dev/null 2>&1
+
+# and put data points in CloudWatch
+* * * * * source /root/config.sh && /usr/bin/php /root/put-status.php > /dev/null 2>&1
+
+# and clean out log files (mongodb is not so tidy yet)
+00 16 * * * /bin/kill -SIGUSR1 `pgrep mongod` && /bin/gzip --quiet /mnt/mongodb/log/mongodb.log.* > /dev/null 2>&1
