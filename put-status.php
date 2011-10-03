@@ -2,7 +2,7 @@
 require_once 'AWSSDKforPHP/sdk.class.php';
 
 define('AWS_KEY', getenv( 'EC2_KEY_ID'));
-define('AWS_SECRET_KEY', getenv( 'EC2_ACCESS_KEY'));
+define('AWS_SECRET_KEY', getenv( 'EC2_SECRET_KEY'));
 define('AWS_ACCOUNT_ID', getenv( 'AWS_ACCOUNT_ID'));
 
 $m = new Mongo();
@@ -52,7 +52,12 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
         $nr_passives = $nr_unhealthy_passives =
                 isset( $ismaster['passives']) && count( $ismaster['passives']) ?
                 count( $ismaster['passives']) : 0;
-        $nr_arbiters = $nr_unhealthy_arbiters = count( $ismaster['arbiters']);
+		if( array_key_exists( 'arbiters', $ismaster)) {
+			$nr_arbiters = $nr_unhealthy_arbiters =
+					count( $ismaster['arbiters']);
+		} else {
+			$nr_arbiters = $nr_unhealthy_arbiters = 0;
+		}
 
         foreach( $set_status['members'] as $i => $member) {
 		if( isset( $replica_set_conf['members'][$i]['priority']) &&
