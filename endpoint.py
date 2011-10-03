@@ -11,9 +11,9 @@ from boto.route53.record import ResourceRecordSets
 
 # your amazon keys
 key = os.environ['R53_KEY_ID']
-access = os.environ['R53_ACCESS_KEY']
+access = os.environ['R53_SECRET_KEY']
 
-NAME = os.environ['NAME']
+NAME = os.environ['SET_NAME']
 HOSTED_ZONE_NAME = os.environ['HOSTED_ZONE_NAME']
 HOSTED_ZONE_ID = os.environ['HOSTED_ZONE_ID']
 hostname = platform.node()
@@ -30,9 +30,10 @@ if __name__ == '__main__':
     zones[zone['Name']] = zone_id
 
     # first get the old value
+    name = "{0}.{1}".format(NAME, HOSTED_ZONE_NAME)
     sets = route53.get_all_rrsets(zones[HOSTED_ZONE_NAME], None)
     for rset in sets:
-        if rset.name == NAME % '.%s' % HOSTED_ZONE_NAME:
+        if rset.name == name:
             value = rset.resource_records[0]
 
     # only change when necessary
@@ -41,11 +42,11 @@ if __name__ == '__main__':
         changes = ResourceRecordSets(route53, zone_id)
 
         if value != '':
-            change = changes.add_change("DELETE", NAME % '.%s' % HOSTED_ZONE_NAME, "CNAME", 60)
+            change = changes.add_change("DELETE", name, "CNAME", 60)
             change.add_value(value)
 
         # now, add ourselves as zuckerberg
-        change = changes.add_change("CREATE", NAME % '.%s' % HOSTED_ZONE_NAME, "CNAME", 60)
+        change = changes.add_change("CREATE", name, "CNAME", 60)
         change.add_value(platform.node())
 
         changes.commit()

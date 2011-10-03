@@ -1,4 +1,4 @@
 #!/usr/bin/mongo admin
 
-db.fsyncUnlock();
+db.runCommand({fsync:1,lock:1});
 db.currentOP();

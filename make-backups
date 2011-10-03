@@ -13,8 +13,8 @@ if [ `/usr/bin/mongo --quiet --eval 'rs.isMaster().ismaster'` != 'false' ]; then
 	exit;
 fi
 
-file=/var/mongodb/run/mongodb.volume.id
-if [ ! -f ${file} ]; then
+vol=`/usr/bin/ec2-describe-instance-attribute ${EC2_INSTANCE_ID} --block-device-mapping | /bin/grep "/dev/sdc" | /usr/bin/awk '{print $3}'`
+if [ "${vol}" == "" ]; then
 	echo "no volume, lets get outa here"
 	exit
 fi
@@ -33,19 +33,14 @@ if [ "$expiration" == "" ]; then
     exit 0
 fi
 
-vols=( `cat ${file}` )
+mount="/var/mongodb"
 
-mountpoints=( "/var/mongodb" )
+/usr/bin/mongo --quiet admin /root/lock.js
+/usr/sbin/xfs_freeze -f ${mount}
+snapshot=($(/usr/bin/ec2-create-snapshot ${vol} --region ${EC2_REGION} --description "Backup of ${vol} - expires ${expiration}"))
+/usr/sbin/xfs_freeze -u ${mount}
+/usr/bin/mongo --quiet admin /root/unlock.js
 
-for ((i = 0; i < ${#vols[@]}; i++))
-do
-    /root/synclock.js
-    /usr/sbin/xfs_freeze -f ${mountpoints[i]}
-    snapshot=($(/usr/bin/ec2-create-snapshot ${vols[i]} --region ${EC2_REGION} --description "Backup of ${vols[i]} - expires ${expiration}"))
-    /usr/sbin/xfs_freeze -u ${mountpoints[i]}
-    /root/unlock.js
-
-    # now add an item to the SimpleDB domain 
-    # containing the snapshot id and its expiration
-    /usr/local/bin/simpledb put ${SET_NAME} ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"
-done
+# now add an item to the SimpleDB domain 
+# containing the snapshot id and its expiration
+/usr/local/bin/simpledb put ${SET_NAME} ${snapshot[1]} expires="${expiration}" timestamp="${timestamp}"

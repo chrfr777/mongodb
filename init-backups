@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# install http://code.google.com/p/amazon-simpledb-cli/
+# and http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1136
+# WARNING: make sure to install the required packages of the second as well
+
+# first make sure we have enough information to do the work
+source /root/config.sh
+
+/usr/local/bin/simpledb create-domain ${SET_NAME}
