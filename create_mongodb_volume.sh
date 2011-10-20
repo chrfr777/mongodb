@@ -25,6 +25,7 @@ if [ ! -e "$device" ] ; then
 		echo "Creating the volume"
 		if [[ ${snapshot_id} =~ snap-[[:alnum:]]{8} ]]; then
 			volume_id=`/usr/bin/ec2-create-volume \
+				--size ${SET_SIZE} \
 				--snapshot ${snapshot_id} \
 				--availability-zone ${EC2_AVAILABILITY_ZONE} \
 				--region ${EC2_REGION} | awk '{print $2}'`
@@ -79,6 +80,8 @@ fi
 # ok, by now we should have a proper device
 echo "Making filesystem"
 /sbin/mkfs.xfs ${device}
+echo "Growing filesystem"
+/usr/sbin/xfs_growfs ${device}
 
 echo "Mounting filesystem"
 /bin/mount -t xfs -o defaults ${device} ${mount}

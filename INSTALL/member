@@ -28,18 +28,23 @@ echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" >>
 apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
 apt-get update && apt-get install mongodb-10gen
 
+# this installed mongodb, and all dependencies. 2.0 is not yet
+# available from the repositories, so we upgrade the binaries directly
+wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.0.0.tgz
+tar xzvf mongodb-linux-x86_64-2.0.0.tgz
+cp mongodb-linux-x86_64-2.0.0/bin/* /usr/bin
+
 stop mongodb
 mkdir /var/mongodb
 
-sed -i 's/\/var\/lib\/mongodb/\/var\/mongodb\/lib/' /etc/mongodb.conf
-sed -i 's/\/var\/log\/mongodb/\/var\/mongodb\/log/' /etc/mongodb.conf
-sed -i 's/--start/--rest --oplogSize 5120 --start --pidfile \/var\/run\/mongodb.pid/' /etc/init/mongodb.conf
+cd /tmp && git clone git://github.com/9apps/mongodb.git && cd mongodb
+cp etc/mongodb.conf /etc/mongodb.conf
+cp etc/init/mongodb.conf /etc/init/mongodb.conf
+./init-backups
 
 sed -i 's/universe/multiverse/g' /etc/apt/sources.list
 apt-get update
 apt-get install ec2-api-tools
-
-./create_mongodb_volume.sh
 
 mkdir -p /var/mongodb/lib
 mkdir -p /var/mongodb/log
