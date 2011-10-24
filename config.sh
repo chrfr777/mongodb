@@ -59,4 +59,4 @@ export EC2_INSTANCE_ID=$($curl $instance_data_url/meta-data/instance-id)
 export SDB_SERVICE_URL='https://sdb.amazonaws.com'
 
 # changing this is entirely your own responsibility, I wouldn't do it
-export SQS_TASK_QUEUE="${name}-tasks"
+export SQS_TASK_QUEUE="${SET_NAME}-tasks"
