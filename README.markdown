@@ -105,7 +105,7 @@ An added bonus is that it is extremely easy to upgrade the entire system. If we 
 	as-create-launch-config mongodb-mongodb-usabilla-com-lc-7 \
 			--image-id ami-fd915694 \
 			--instance-type m1.large \
-			--user-data ${userdata} \
+			--user-data "${userdata}" \
 			--group mongodb
 
 	as-update-auto-scaling-group mongodb-mongodb-usabilla-com-as-group-1 \
