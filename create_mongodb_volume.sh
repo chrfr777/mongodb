@@ -73,7 +73,7 @@ if [ ! -e "$device" ] ; then
 		done
 
 		# and now we have to make sure the device is deleted on termination
-		/usr/bin/ec2-modify-instance-attribute --block-device-mapping "${device}=:true" ${EC2_INSTANCE_ID}
+		/usr/bin/ec2-modify-instance-attribute --block-device-mapping "${device}=:true" ${EC2_INSTANCE_ID} --region ${EC2_REGION}
 	fi
 fi
 
