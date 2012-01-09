@@ -7,6 +7,7 @@ define('AWS_ACCOUNT_ID', getenv( 'AWS_ACCOUNT_ID'));
 
 $m = new Mongo();
 $cw = new AmazonCloudWatch();
+$cw->set_region('monitoring.' . getenv('EC2_REGION') . '.amazonaws.com');
 
 $db = $m->admin;
 $local = $m->selectDB( "local");
