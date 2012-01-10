@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/bash
 # we get the replica set configuration from user-data, this way we can
 # use features as auto-scaling to safeguard our setup
 #
