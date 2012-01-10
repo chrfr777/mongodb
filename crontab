@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 @daily /root/purge-backups > /dev/null 2>&1
 @daily /root/make-backups "7 days" > /dev/null 2>&1
 @weekly /root/make-backups "1 month" > /dev/null 2>&1
@@ -10,7 +12,7 @@
 * * * * * /root/endpoint.sh > /dev/null 2>&1
 
 # and put data points in CloudWatch
-* * * * * /root/put-status.sh > /dev/null 2>&1
+* * * * * source /root/config.sh && /root/put-status.sh > /dev/null 2>&1
 
 # and clean out log files (mongodb is not so tidy yet)
 00 16 * * * /bin/kill -SIGUSR1 `pgrep mongod` && /bin/gzip --quiet /mnt/mongodb/log/mongodb.log.* > /dev/null 2>&1
