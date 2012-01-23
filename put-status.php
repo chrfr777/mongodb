@@ -289,14 +289,14 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Dimensions' => $replset,
 			'Value' => $server_status['backgroundFlushing']['last_ms'],
 			'Timestamp' => $timestamp,
-			'Unit' => 'Microseconds'
+			'Unit' => 'Miliseconds'
 		),
 		array(
 			'MetricName' => 'LastFlushOperation',
 			'Dimensions' => $dimensions,
 			'Value' => $server_status['backgroundFlushing']['last_ms'],
 			'Timestamp' => $timestamp,
-			'Unit' => 'Microseconds'
+			'Unit' => 'Miliseconds'
 		),
 		array(
 			'MetricName' => 'OpenCursors',
