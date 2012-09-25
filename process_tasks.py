@@ -1,4 +1,4 @@
-import os, subprocess
+import os
 
 from boto.sqs.connection import SQSConnection
 from boto.sqs.message import Message
@@ -19,8 +19,7 @@ if __name__ == '__main__':
     m = tasks.read()
     while m != None:
         body = m.get_body()
-        exit = subprocess.call(["/usr/bin/mongo",
-                "--quiet", "--eval", body])
+        os.system("/usr/bin/mongo --quiet --eval {0}".format(body))
 
         tasks.delete_message(m)
 
