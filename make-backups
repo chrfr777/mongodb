@@ -13,7 +13,7 @@ if [ `/usr/bin/mongo --quiet --eval 'rs.isMaster().ismaster'` != 'false' ]; then
 	exit;
 fi
 
-vol=`/usr/bin/ec2-describe-instance-attribute ${EC2_INSTANCE_ID} --block-device-mapping --region ${EC2_REGION} | /bin/grep "/dev/sdc" | /usr/bin/awk '{print $3}'`
+vol=`/usr/bin/ec2-describe-instance-attribute ${EC2_INSTANCE_ID} --block-device-mapping --region ${EC2_REGION} | /bin/grep "/dev/sdf" | /usr/bin/awk '{print $3}'`
 if [ "${vol}" == "" ]; then
 	echo "no volume, lets get outa here"
 	exit
