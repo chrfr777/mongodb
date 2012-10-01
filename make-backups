@@ -35,11 +35,11 @@ fi
 
 mount="/var/mongodb"
 
-/usr/bin/mongo --quiet admin /root/lock.js
+#/usr/bin/mongo --quiet admin /root/lock.js
 /usr/sbin/xfs_freeze -f ${mount}
 snapshot=($(/usr/bin/ec2-create-snapshot ${vol} --region ${EC2_REGION} --description "Backup of ${vol} - expires ${expiration}"))
 /usr/sbin/xfs_freeze -u ${mount}
-/usr/bin/mongo --quiet admin /root/unlock.js
+#/usr/bin/mongo --quiet admin /root/unlock.js
 
 # now add an item to the SimpleDB domain 
 # containing the snapshot id and its expiration

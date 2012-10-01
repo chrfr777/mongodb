@@ -120,7 +120,7 @@ function add_replica_set_metrics( $cw, $ismaster, $server_status, $set_status, $
 		)
 	);
 
-	$response = $cw->put_metric_data('9Apps/MongoDB', $metrics);
+	$response = $cw->put_metric_data('9apps/MongoDB', $metrics);
 	if( !$response->isOK()) { print_r( $response); }
 }
 
@@ -280,7 +280,7 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 			'Timestamp' => $timestamp,
 			'Unit' => 'Count'
 	));
-	$response = $cw->put_metric_data('9Apps/MongoDB', $metrics);
+	$response = $cw->put_metric_data('9apps/MongoDB', $metrics);
 	if( !$response->isOK()) { print_r( $response); }
 
 	$metrics = array(
@@ -323,8 +323,15 @@ function add_host_metrics( $cw, $ismaster, $server_status, $lag) {
 				'Timestamp' => $timestamp,
 				'Unit' => 'Seconds'
 		);
+		$metrics[] = array(
+				'MetricName' => 'Lag',
+				'Dimensions' => $replset,
+				'Value' => $lag,
+				'Timestamp' => $timestamp,
+				'Unit' => 'Seconds'
+		);
 	}
-	$response = $cw->put_metric_data('9Apps/MongoDB', $metrics);
+	$response = $cw->put_metric_data('9apps/MongoDB', $metrics);
 	if( !$response->isOK()) { print_r( $response); }
 }
 
@@ -343,7 +350,7 @@ function get_lag( $host, $replica_set_status) {
 		if( isset( $base) && isset( $me)) break;
 	}
 
-	return $me - $base;
+	return $base - $me;
 }
 
 ?>
