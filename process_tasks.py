@@ -14,10 +14,10 @@ if __name__ == '__main__':
   region_info = utils.get_region_info()
   sqs = SQSConnection(key, access, region=region_info)
 
-    tasks = sqs.create_queue(queue)
+  tasks = sqs.create_queue(queue)
 
-    m = tasks.read()
-    while m != None:
+  m = tasks.read()
+  while m != None:
         body = m.get_body()
         os.system("/usr/bin/mongo --quiet --eval {0}".format(body))
 
